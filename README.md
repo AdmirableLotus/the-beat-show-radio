@@ -28,11 +28,7 @@ The Beat Show Radio is an online radio station focused on hip-hop, R&B, and inde
 - CSS3 (custom properties, media queries, keyframes, shadows)
 - JavaScript (modular functions, DOM manipulation, fetch APIs)
 
-## 📸 Screenshots
 
-| Hero | Player | Store |
-|------|--------|-------|
-| ![Hero](screenshots/hero.png) | ![Player](screenshots/player.png) | ![Store](screenshots/store.png) |
 
-## 🛠️ Folder Structure
+
 
