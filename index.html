@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Beat Show Radio</title>
+  <meta name="description" content="The Beat Show Radio — Live music, requests and chat." />
+  <style>
+    :root{
+      --bg: #09070f;
+      --bg2: #120815;
+      --card: rgba(255,255,255,0.06);
+      --stroke: rgba(255,255,255,0.12);
+      --text: #ffeef2;
+      --muted: #e9b9c4;
+      --primary: #ff3b6e;
+      --primary-2: #ff7a2f;
+      --accent: #ff2f49;
+      --accent-2: #ff7a2f;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 18px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 700px at 15% 5%, rgba(255,70,70,0.30) 0%, transparent 55%),
+        radial-gradient(900px 600px at 90% 20%, rgba(255,120,0,0.22) 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+      overflow-x:hidden;
+    }
+
+    .bg-waves{position:fixed; inset:0; pointer-events:none; z-index:-1;}
+    .bg-waves::before, .bg-waves::after{
+      content:""; position:absolute; inset:-20% -10% -10% -10%;
+      background:
+        repeating-linear-gradient(120deg, rgba(255,120,0,0.10) 0 6px, rgba(255,120,0,0) 6px 22px),
+        repeating-linear-gradient(60deg, rgba(255,47,73,0.10) 0 8px, rgba(255,47,73,0) 8px 26px);
+      filter: blur(14px) saturate(130%);
+      opacity:.55;
+      transform: translate3d(0,0,0);
+      animation: drift 22s linear infinite alternate;
+      mask-image: radial-gradient(1200px 700px at 50% 30%, #000 35%, transparent 75%);
+    }
+    .bg-waves::after{animation-duration:30s; opacity:.45; filter: blur(18px) saturate(120%)}
+    @keyframes drift { 0%{transform:translate3d(-6%,-2%,0) scale(1.02)} 100%{transform:translate3d(6%,4%,0) scale(1.04)} }
+
+    .wrap{max-width:1200px; margin:0 auto; padding:48px 20px 80px;}
+
+    .hero{display:grid; place-items:center; text-align:center; gap:18px; margin-top:12px;}
+    .title{font-size: clamp(36px, 6vw, 84px); letter-spacing: .08em; font-weight:800; line-height:1.05; margin:0; text-transform:uppercase;}
+    .title.neon-blue{color:#b8c7ff; text-shadow: 0 0 10px rgba(94,231,255,.65), 0 0 20px rgba(124,77,255,.7), 0 0 45px rgba(124,77,255,.45)}
+    .title.neon-orange{font-size: clamp(22px,3.2vw,38px); color:#ffd1c6; letter-spacing:.35em; text-shadow: 0 0 8px rgba(255,120,0,.9), 0 0 22px rgba(255,47,73,.75), 0 0 40px rgba(255,47,73,.55)}
+
+    .logo{width: clamp(180px, 42vw, 360px); aspect-ratio:1/1; border-radius:24px; background:#111; display:grid; place-items:center; margin:10px auto 28px; box-shadow: 0 10px 40px rgba(0,0,0,.45), 0 0 0 10px #e5e7eb, 0 0 0 16px rgba(255,59,141,.25)}
+    .logo img{width:100%; height:100%; object-fit:cover; border-radius:24px}
+
+    .grid{display:grid; grid-template-columns: 1.1fr 1fr; gap:28px; margin-top:12px; align-items:start}
+    .col{display:grid; gap:28px}
+
+    .card{background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%); border:1px solid var(--stroke); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow); backdrop-filter: blur(6px)}
+    .card h3{margin:0 0 16px; font-weight:800; letter-spacing:.06em}
+
+    .live-badge{display:inline-flex; align-items:center; gap:8px; font-weight:700; color:#fff; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); padding:6px 12px; border-radius:999px; font-size:14px; box-shadow:0 6px 18px rgba(255,47,73,.35)}
+    .live-badge .dot{width:8px; height:8px; background:#ffeaec; border-radius:50%; box-shadow:0 0 0 0 rgba(255,234,236,.9); animation: pulse 1.5s infinite}
+    @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,234,236,.8)}70%{box-shadow:0 0 0 10px rgba(255,234,236,0)}100%{box-shadow:0 0 0 0 rgba(255,234,236,0)}}
+
+    .now-playing .header{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px}
+    .now-playing h3{margin:0; font-size:22px}
+    .now-playing .np{font-size:18px; font-weight:700; margin-left:8px}
+    .disc{position:relative; width:120px; height:120px; margin:10px 0 14px}
+    .ring{position:absolute; inset:0; border-radius:50%; border:2px solid transparent; mix-blend-mode:screen}
+    .ring.r1{border-color: rgba(255,122,47,.85); filter:drop-shadow(0 0 8px rgba(255,122,47,.7)); animation: spin 8s linear infinite}
+    .ring.r2{inset:10px; border-color: rgba(255,47,73,.75); filter:drop-shadow(0 0 10px rgba(255,47,73,.7)); animation: spin 10s linear infinite reverse}
+    .ring.r3{inset:22px; border-color: rgba(255,180,47,.7); filter:drop-shadow(0 0 8px rgba(255,180,47,.6)); animation: spin 12s linear infinite}
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+    .controls{display:flex; align-items:center; gap:10px; margin-top:6px}
+    .btn{border:1px solid var(--stroke); background:rgba(255,255,255,.06); color:var(--text); padding:10px 12px; border-radius:12px; cursor:pointer; transition:.2s transform,.2s background}
+    .btn:hover{background:rgba(255,255,255,.12); transform:translateY(-1px)}
+    .seek{appearance:none; width:100%; height:6px; background:linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%); border-radius:999px; outline:none; opacity:.9; margin:10px 0}
+    .seek::-webkit-slider-thumb{appearance:none; width:16px; height:16px; border-radius:50%; background:#fff; border:3px solid var(--accent)}
+
+    .request h3{font-size:22px}
+    .input{width:100%; background:rgba(255,255,255,.06); color:var(--text); border:1px solid var(--stroke); border-radius:14px; padding:14px; outline:none; transition:border .2s, box-shadow .2s}
+    .input::placeholder{color:var(--muted)}
+    .input:focus{border-color: rgba(94,231,255,.6); box-shadow: 0 0 0 4px rgba(94,231,255,.12)}
+    .stack{display:grid; gap:12px}
+    .send{display:block; width:100%; border:0; border-radius:14px; padding:14px 18px; font-weight:800; letter-spacing:.12em; color:white; cursor:pointer; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); box-shadow:0 10px 30px rgba(255,100,60,.25); transition: transform .12s ease, filter .2s}
+    .send:hover{transform: translateY(-1px); filter:brightness(1.05)}
+
+    .chat h3{font-size:22px}
+    .messages{min-height:80px; max-height:180px; overflow:auto; padding:6px 0 4px; color:var(--muted)}
+    .chat .row{display:flex; gap:10px; margin-top:10px}
+    .chat .row .input{flex:1}
+
+    .about{margin-top:28px}
+    .about h4{margin:10px 0 6px; font-weight:800; letter-spacing:.02em}
+
+    .links-grid{display:grid; grid-template-columns: repeat(3, 1fr); gap:28px; margin-top:28px}
+    .cta{display:inline-block; text-align:center; text-decoration:none; color:#fff; font-weight:800; letter-spacing:.08em; padding:12px 16px; border-radius:14px; background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%); box-shadow:0 10px 22px rgba(255,100,60,.22); transition:transform .12s ease, filter .2s}
+    .cta:hover{transform:translateY(-1px); filter:brightness(1.05)}
+    .cta.secondary{background: linear-gradient(135deg, #5ee7ff 0%, #7c4dff 100%)}
+    .link-list{display:grid; gap:10px}
+    .link-list a{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); background:rgba(255,255,255,.06); border:1px solid var(--stroke); padding:12px 14px; border-radius:12px}
+    .link-list a:hover{background:rgba(255,255,255,.12)}
+    /* Store products */
+    .products-grid{display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:16px; margin-top:14px}
+    .product-card{background:rgba(255,255,255,.06); border:1px solid var(--stroke); border-radius:14px; overflow:hidden; display:flex; flex-direction:column}
+    .product-card img{width:100%; aspect-ratio:1/1; object-fit:cover; display:block}
+    .product-body{padding:10px 12px; display:grid; gap:6px}
+    .product-title{font-weight:700; font-size:14px}
+    .product-price{color:#ffd1c6; font-weight:700}
+    .product-actions{display:flex; gap:8px; margin-top:6px}
+    .product-actions .cta{padding:8px 10px; font-size:12px}
+
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      .col{order:unset}
+      .links-grid{grid-template-columns:1fr}
+      .products-grid{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-waves" aria-hidden="true"></div>
+  <svg class="bg-lines" aria-hidden="true" viewBox="0 0 1440 720" preserveAspectRatio="none" style="position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.6">
+    <defs>
+      <linearGradient id="hot" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0%" stop-color="#ff2f49"/>
+        <stop offset="50%" stop-color="#ff7a2f"/>
+        <stop offset="100%" stop-color="#ff2f49"/>
+      </linearGradient>
+      <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="0.6"/>
+      </filter>
+      <path id="wave" d="M0,420 C120,380 240,460 360,420 S600,380 720,420 960,460 1080,420 1320,380 1440,420" fill="none"/>
+    </defs>
+    <g stroke="url(#hot)" stroke-width="1.5" filter="url(#soft)">
+      <g>
+        <use href="#wave"/>
+        <use href="#wave" transform="translate(0,-18)" opacity="0.85"/>
+        <use href="#wave" transform="translate(0,-36)" opacity="0.7"/>
+        <use href="#wave" transform="translate(0,-54)" opacity="0.55"/>
+        <use href="#wave" transform="translate(0,-72)" opacity="0.4"/>
+        <use href="#wave" transform="translate(0,-90)" opacity="0.28"/>
+        <use href="#wave" transform="translate(0,18)" opacity="0.85"/>
+        <use href="#wave" transform="translate(0,36)" opacity="0.7"/>
+        <use href="#wave" transform="translate(0,54)" opacity="0.55"/>
+        <use href="#wave" transform="translate(0,72)" opacity="0.4"/>
+        <use href="#wave" transform="translate(0,90)" opacity="0.28"/>
+      </g>
+      <animateTransform attributeName="transform" type="translate" values="-40 0; 40 0; -40 0" dur="28s" repeatCount="indefinite"/>
+    </g>
+  </svg>
+
+  <div class="wrap">
+    <header class="hero">
+      <h1 class="title neon-blue">THE BEAT SHOW</h1>
+      <h2 class="title neon-orange">RADIO</h2>
+      <div class="logo" aria-label="Station logo">
+        <img src="IMG_8116.png" alt="TBS logo" />
+      </div>
+    </header>
+
+    <main class="grid" aria-label="Live player, requests and chat">
+      <section class="col">
+        <div class="card now-playing">
+          <div class="header">
+            <span class="live-badge"><span class="dot"></span> LIVE</span>
+            <h3>Now Playing... <span id="np" class="np"></span></h3>
+          </div>
+          <div class="disc" aria-hidden="true">
+            <span class="ring r1"></span>
+            <span class="ring r2"></span>
+            <span class="ring r3"></span>
+          </div>
+          <input class="seek" type="range" min="0" max="100" value="60" aria-label="Volume" />
+          <div class="controls" role="group" aria-label="Player controls">
+            <button class="btn" id="play" aria-label="Play/Pause">Play</button>
+            <button class="btn" id="mute" aria-label="Mute">Mute</button>
+          </div>
+        </div>
+
+        <div class="card chat">
+          <h3>LIVE CHAT</h3>
+          <div class="messages" id="messages">Welcome to the chat! Be kind and have fun.</div>
+          <div class="row">
+            <input id="chatInput" class="input" placeholder="Enter your message here..." />
+            <button class="btn" id="sendChat">Send</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="col">
+        <div class="card request">
+          <h3>LIVE REQUEST</h3>
+          <form id="requestForm" class="stack" autocomplete="off">
+            <input class="input" name="song" placeholder="Enter your song" required />
+            <textarea class="input" name="message" rows="4" placeholder="Enter your message here..."></textarea>
+            <button class="send" type="submit">SEND</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <section class="card about" aria-label="About The Beat Show">
+      <h3>ABOUT THE BEAT SHOW</h3>
+      <h4>About The Beat Show Radio</h4>
+      <p>The Beat Show Radio is more than a station — it is a brand built on sound, culture, and connection. Since 2019, we have been broadcasting powerful music that moves people, empowers artists, and amplifies voices that deserve to be heard.</p>
+      <p>As a fully digital platform under KTBS-DB (Digital Broadcasting), The Beat Show Radio stands at the crossroads of independent artistry and mainstream quality. We deliver the hottest blends of hip-hop, R&B, neo-soul, southern soul, and pop, creating a space where both rising and established artists can shine without compromise.</p>
+      <h4>Our Mission</h4>
+      <p>To serve as a bold and authentic voice for the culture, showcasing the best of independent music while connecting communities through creativity, rhythm, and real stories.</p>
+      <h4>Our Vibe</h4>
+      <p>We are powered by passion, guided by integrity, and focused on pushing boundaries — from the beats we spin to the movements we support. Whether you are tuning in for a fresh new sound, artist interviews, or exclusive drops, The Beat Show Radio is your front-row seat to the future of music.</p>
+      <h4>Our Reach</h4>
+      <p>From live radio and curated playlists to mobile streaming and community events, The Beat Show Radio is a multimedia brand that moves with the times — accessible, engaging, and always evolving.</p>
+      <p><strong>The Beat Show Radio is not just what you hear — it is what you feel.</strong></p>
+    </section>
+
+    <section class="links-grid">
+      <div class="card store">
+        <h3>URBAN SOUL STORE</h3>
+        <p>Grab exclusive tees and gear that match the vibe.</p>
+        <a class="cta" href="https://urban-soul.printify.me/" target="_blank" rel="noopener">Visit Store</a>
+        <div id="featured-products" class="products-grid">
+          
+          <!-- Additional products from your links -->
+          <div class="product-card">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'><defs><linearGradient id='g' x1='0' x2='1'><stop stop-color='%23ff2f49'/><stop offset='1' stop-color='%23ff7a2f'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='32' fill='white'>KTBS Tee</text></svg>" alt="KTBS Digital Radio Tee" />
+            <div class="product-body">
+              <div class="product-title">KTBS Digital Radio Tee</div>
+              <div class="product-price"></div>
+              <div class="product-actions"><a class="cta" href="https://urban-soul.printify.me/product/19943676/the-beat-show-ktbs-digital-radio-unisex-heavy-cotton-tee" target="_blank" rel="noopener">Buy</a></div>
+            </div>
+          </div>
+          <div class="product-card">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'><defs><linearGradient id='g' x1='0' x2='1'><stop stop-color='%23ff7a2f'/><stop offset='1' stop-color='%23ff2f49'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='32' fill='white'>GOAT Hoodie</text></svg>" alt="GOAT Hoodie" />
+            <div class="product-body">
+              <div class="product-title">GOAT Heavy Blend Hoodie</div>
+              <div class="product-price"></div>
+              <div class="product-actions"><a class="cta" href="https://urban-soul.printify.me/product/17881031/goat-unisex-heavy-blend-hooded-sweatshirt-stylish-comfort-for-all-seasons" target="_blank" rel="noopener">Buy</a></div>
+            </div>
+          </div>
+          <div class="product-card">
+            <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'><defs><linearGradient id='g' x1='0' x2='1'><stop stop-color='%23ff3b6e'/><stop offset='1' stop-color='%23ff7a2f'/></linearGradient></defs><rect width='100%' height='100%' fill='url(%23g)'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='28' fill='white'>Beat Show Hoodie</text></svg>" alt="The Beat Show Hoodie" />
+            <div class="product-body">
+              <div class="product-title">The Beat Show Hoodie</div>
+              <div class="product-price"></div>
+              <div class="product-actions"><a class="cta" href="https://urban-soul.printify.me/product/14262294/the-beat-show-unisex-heavy-blend-hooded-sweatshirt" target="_blank" rel="noopener">Buy</a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card connect">
+        <h3>CONNECT</h3>
+        <div class="link-list">
+          <a href="https://instagram.com/4_thebeatshow" target="_blank" rel="noopener">Instagram: @4_thebeatshow</a>
+          <a href="https://www.facebook.com/4THEBEATSHOW" target="_blank" rel="noopener">Facebook: @4THEBEATSHOW</a>
+          <a href="https://youtube.com/@djregecfleetdjs" target="_blank" rel="noopener">YouTube: @djregecfleetdjs</a>
+          <a href="https://www.tiktok.com/@reginalclark?_t=ZP-8ww2t0hcn8h&_r=1" target="_blank" rel="noopener">TikTok: @reginalclark</a>
+          <a href="mailto:4thebeatshowradio@gmail.com" target="_blank" rel="noopener">4thebeatshowradio@gmail.com</a>
+        </div>
+      </div>
+
+      <div class="card sponsor">
+        <h3>Sponsorship Opportunity: The Beat Show Radio</h3>
+        <p>Partner with a brand that delivers results with precision and purpose.</p>
+        <p>At The Beat Show Radio (KTBS-DB), we pride ourselves on attention to detail, consistent delivery, and cultural relevance. Our broadcasts reach a growing audience of music lovers, trendsetters, and independent artists who value quality and authenticity.</p>
+        <p><strong>As a sponsor, your brand will benefit from:</strong></p>
+        <ul>
+          <li>Targeted exposure to engaged listeners</li>
+          <li>On-air mentions, ads, and product placements</li>
+          <li>Digital reach across our website, mobile app, and social media platforms</li>
+          <li>A customized partnership that aligns with your goals</li>
+        </ul>
+        <p>Whether you are launching a new product, expanding into new markets, or looking to build community connections — The Beat Show Radio offers a professional and trusted platform that gets results.</p>
+        <p><strong>Let us build something impactful — together.</strong></p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px">
+          <a class="cta secondary" href="mailto:4thebeatshowradio@gmail.com?subject=Sponsor%20Inquiry%20-%20The%20Beat%20Show%20Radio">Become a Sponsor</a>
+          <a class="cta" href="https://www.paypal.com/ncp/payment/7EPXBK48MMASQ" target="_blank" rel="noopener">Donate</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Chat demo
+    const msgs = document.getElementById('messages');
+    const chatInput = document.getElementById('chatInput');
+    const sendChat = document.getElementById('sendChat');
+    if (sendChat) {
+      sendChat.addEventListener('click', () => {
+        const text = (chatInput.value || '').trim();
+        if(!text) return;
+        const p = document.createElement('div');
+        p.textContent = 'You: ' + text;
+        msgs.appendChild(p);
+        chatInput.value = '';
+        msgs.scrollTop = msgs.scrollHeight;
+      });
+    }
+    document.getElementById('requestForm')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      alert('Request sent!\nSong: ' + (data.song||'') + '\nMessage: ' + (data.message||''));
+      e.target.reset();
+    });
+  </script>
+  <script>
+    // Live stream wiring for Play/Mute and volume slider
+    (function(){
+      const STREAM_URL = 'http://s1.fleetradionetwork.com:8410/;';
+      const playBtn = document.getElementById('play');
+      const muteBtn = document.getElementById('mute');
+      const vol = document.querySelector('.seek');
+      if(!playBtn || !vol) return;
+
+      const radio = new Audio();
+      radio.src = STREAM_URL;
+      radio.preload = 'none';
+      radio.crossOrigin = 'anonymous';
+      radio.volume = (parseFloat(vol.value || '60') || 60) / 100;
+
+      async function togglePlay(){
+        try{
+          if(radio.paused){
+            await radio.play();
+            playBtn.textContent = 'Pause';
+          }else{
+            radio.pause();
+            playBtn.textContent = 'Play';
+          }
+        }catch(err){
+          console.error('Stream error', err);
+          alert('Unable to start the stream. Please try again.');
+        }
+      }
+
+      playBtn.addEventListener('click', togglePlay);
+      vol.addEventListener('input', (e)=>{ radio.volume = Number(e.target.value)/100; });
+      muteBtn?.addEventListener('click', ()=>{
+        radio.muted = !radio.muted;
+        muteBtn.textContent = radio.muted ? 'Unmute' : 'Mute';
+      });
+    })();
+  </script>
+  <script>
+    // Now Playing (song/artist) display in header
+    (function(){
+      const BASE = 'http://s1.fleetradionetwork.com:8410';
+      const np = document.getElementById('np');
+      if(!np) return;
+
+      function setText(t){ np.textContent = t || ''; }
+
+      async function fetchIcecast(){
+        const res = await fetch(BASE + '/status-json.xsl', {cache: 'no-store'});
+        const j = await res.json();
+        const src = j && j.icestats && j.icestats.source;
+        const s = Array.isArray(src) ? src[0] : src;
+        if(!s) return '';
+        return s.title || s.streamtitle || '';
+      }
+      async function fetchShoutcast(){
+        const res = await fetch(BASE + '/stats?sid=1&json=1', {cache: 'no-store'});
+        const j = await res.json();
+        return (j && (j.songtitle || (j.streams && j.streams[0] && j.streams[0].songtitle))) || '';
+      }
+      async function fetchLegacy(){
+        const res = await fetch(BASE + '/7.html?sid=1', {cache: 'no-store'});
+        const text = await res.text();
+        const m = text.match(/,([^,<\r\n]+)$/);
+        return m ? m[1].trim() : '';
+      }
+      async function refresh(){
+        try{
+          let t = await fetchIcecast().catch(()=> '');
+          if(!t){ t = await fetchShoutcast().catch(()=> ''); }
+          if(!t){ t = await fetchLegacy().catch(()=> ''); }
+          if(t) setText(t);
+        }catch(e){ /* CORS/mixed-content may block */ }
+      }
+      refresh();
+      setInterval(refresh, 30000);
+    })();
+  </script>
+  <script>
+    // Optional: replace placeholder featured products with your own
+    // Provide window.FEATURED_PRODUCTS = [{title, price, url, image}] before this script, or set it here.
+    (function(){
+      const data = window.FEATURED_PRODUCTS || null;
+      if(!data || !Array.isArray(data) || !data.length) return;
+      const mount = document.getElementById('featured-products');
+      if(!mount) return;
+      mount.innerHTML = '';
+      for(const p of data.slice(0,6)){
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+          <img alt="${(p.title||'Product').replace(/"/g,'&quot;')}" src="${p.image||''}">
+          <div class="product-body">
+            <div class="product-title">${p.title||'Product'}</div>
+            <div class="product-price">${p.price||''}</div>
+            <div class="product-actions"><a class="cta" target="_blank" rel="noopener" href="${p.url||'#'}">Buy</a></div>
+          </div>`;
+        mount.appendChild(card);
+      }
+    })();
+  </script>
+</body>
+</html>
